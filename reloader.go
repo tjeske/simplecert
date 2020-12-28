@@ -10,7 +10,6 @@ package simplecert
 
 import (
 	"crypto/tls"
-	"log"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -50,7 +49,7 @@ func NewCertReloader(certPath, keyPath string, logFile *os.File, cleanup func())
 	// kickoff routine for handling singals
 	go func() {
 		sigChan := make(chan os.Signal, 1)
-		signal.Notify(sigChan, syscall.SIGHUP, syscall.SIGINT, syscall.SIGABRT)
+		signal.Notify(sigChan, syscall.SIGHUP)
 		for sig := range sigChan {
 			if sig == syscall.SIGHUP {
 				log.Printf("Received SIGHUP, reloading TLS certificate and key from %q and %q", certPath, keyPath)
@@ -59,7 +58,7 @@ func NewCertReloader(certPath, keyPath string, logFile *os.File, cleanup func())
 				// cleanup
 				err := logFile.Close()
 				if err != nil {
-					log.Println("[FATAL] simplecert: failed to close logfile handle: ", err)
+					log.Fatal("simplecert: failed to close logfile handle: ", err)
 				}
 				log.Println("[INFO] simplecert: closed logfile handle")
 

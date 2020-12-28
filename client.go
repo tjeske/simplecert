@@ -10,7 +10,6 @@ package simplecert
 
 import (
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/go-acme/lego/v4/challenge/dns01"

@@ -11,7 +11,6 @@ package simplecert
 import (
 	"crypto/tls"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"os/exec"
@@ -36,7 +35,7 @@ func ListenAndServeTLSCustom(addr string, handler http.Handler, cfg *Config, tls
 
 	certReloader, err := Init(cfg, cleanup)
 	if err != nil {
-		log.Fatal("[FATAL] simplecert init failed: ", err)
+		log.Fatal("simplecert init failed: ", err)
 	}
 
 	// now set GetCertificate to the reloaders GetCertificateFunc to enable hot reload
@@ -64,7 +63,7 @@ func ListenAndServeTLSLocal(addr string, handler http.Handler, cleanup func(), d
 	cfg.Local = true
 	certReloader, err := Init(cfg, cleanup)
 	if err != nil {
-		log.Fatal("[FATAL] simplecert init failed: ", err)
+		log.Fatal("simplecert init failed: ", err)
 	}
 
 	// redirect HTTP to HTTPS
@@ -99,7 +98,7 @@ func ListenAndServeTLS(addr string, handler http.Handler, mail string, cleanup f
 	cfg.SSLEmail = mail
 	certReloader, err := Init(cfg, cleanup)
 	if err != nil {
-		log.Fatal("[FATAL] simplecert init failed: ", err)
+		log.Fatal("simplecert init failed: ", err)
 	}
 
 	// redirect HTTP to HTTPS
@@ -143,20 +142,20 @@ func Redirect(w http.ResponseWriter, req *http.Request) {
 
 // ensures the cacheDir exists, fatals on error
 func ensureCacheDirExists(cacheDir string) {
-	log.Println("[INFO] simplecert: checking if cacheDir " + cacheDir + " exists...")
+	log.Info("simplecert: checking if cacheDir " + cacheDir + " exists...")
 
 	// create cacheDir if necessary
 	info, err := os.Stat(cacheDir)
 	if err != nil {
-		log.Println("[INFO] simplecert: cacheDir does not exist - creating it")
+		log.Info("simplecert: cacheDir does not exist - creating it")
 		err = os.MkdirAll(c.CacheDir, c.CacheDirPerm)
 		if err != nil {
-			log.Fatal("[FATAL] simplecert: could not create cacheDir: ", err)
+			log.Fatal("simplecert: could not create cacheDir: ", err)
 		}
 	} else {
 		// exists. make sure its a directory
 		if !info.IsDir() {
-			log.Fatal("[FATAL] simplecert: cacheDir: expected a directory but got a file?!")
+			log.Fatal("simplecert: cacheDir: expected a directory but got a file?!")
 		}
 	}
 }
@@ -167,6 +166,6 @@ func runCommand(cmd string, args ...string) {
 	out, err := exec.Command(cmd, args...).CombinedOutput()
 	if err != nil {
 		log.Println("[ERROR] failed to run command: ", cmd+strings.Join(args, " "))
-		log.Fatal("[FATAL] simplecert: error: ", err, ", output: ", string(out))
+		log.Fatal("simplecert: error: ", err, ", output: ", string(out))
 	}
 }

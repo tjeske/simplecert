@@ -13,12 +13,48 @@ import (
 	"errors"
 	"io"
 	"io/ioutil"
-	"log"
+	l "log"
 	"os"
 	"path/filepath"
 
 	"github.com/go-acme/lego/v4/certificate"
 )
+
+type Logger interface {
+	Println(v ...interface{})
+	Warn(v ...interface{})
+	Info(v ...interface{})
+	Printf(format string, v ...interface{})
+	Fatal(v ...interface{})
+	Fatalf(format string, v ...interface{})
+	SetOutput(w io.Writer)
+}
+
+type SimpleCertLogger struct {
+	l.Logger
+}
+
+func (l2 *SimpleCertLogger) Warn(v ...interface{}) {
+	if msg, ok := v[0].(string); ok {
+		l2.Println("[WARNING] " + msg)
+	} else {
+		l2.Println(v...)
+	}
+}
+
+func (l2 *SimpleCertLogger) Info(v ...interface{}) {
+	if msg, ok := v[0].(string); ok {
+		l2.Println("[INFO] " + msg)
+	} else {
+		l2.Println(v...)
+	}
+}
+
+var log Logger
+
+func SetLogger(_log Logger) {
+	log = _log
+}
 
 const (
 	logFileName          = "simplecert.log"
@@ -28,6 +64,13 @@ const (
 )
 
 var local bool
+
+func init() {
+	x := &SimpleCertLogger{l.Logger{}}
+	x.SetOutput(os.Stderr)
+	x.SetFlags(l.LstdFlags)
+	log = x
+}
 
 // Init obtains a new LetsEncrypt cert for the specified domains if there is none in cacheDir
 // or loads an existing one. Certs will be auto renewed in the configured interval.
@@ -86,7 +129,7 @@ func Init(cfg *Config, cleanup func()) (*CertReloader, error) {
 			// cert cached! Did the domains change?
 			// If the domains have been modified we need to generate a new certificate
 			if domainsChanged(certFilePath, keyFilePath) {
-				log.Println("[INFO] cert cached but domains have changed. generating a new one...")
+				log.Info("cert cached but domains have changed. generating a new one...")
 				createLocalCert(certFilePath, keyFilePath)
 			}
 		} else {
@@ -117,11 +160,11 @@ func Init(cfg *Config, cleanup func()) (*CertReloader, error) {
 		 */
 
 		if domainsChanged(certFilePath, keyFilePath) {
-			log.Println("[INFO] domains have changed. Obtaining a new certificate...")
+			log.Info("domains have changed. Obtaining a new certificate...")
 			goto obtainNewCert
 		}
 
-		log.Println("[INFO] simplecert: found cert in cacheDir")
+		log.Info("simplecert: found cert in cacheDir")
 
 		// read cert resource from disk
 		b, err := ioutil.ReadFile(filepath.Join(c.CacheDir, certResourceFileName))
@@ -187,7 +230,7 @@ obtainNewCert:
 		return nil, errors.New("simplecert: failed to obtain cert: " + err.Error())
 	}
 
-	log.Println("[INFO] simplecert: client obtained cert for domain: ", cert.Domain)
+	log.Info("simplecert: client obtained cert for domain: ", cert.Domain)
 
 	// Save cert to disk
 	err = saveCertToDisk(cert, c.CacheDir)
@@ -195,7 +238,7 @@ obtainNewCert:
 		return nil, errors.New("simplecert: failed to write cert to disk: " + err.Error())
 	}
 
-	log.Println("[INFO] simplecert: wrote new cert to disk!")
+	log.Info("simplecert: wrote new cert to disk!")
 
 	// kickoff renewal routine
 	go renewalRoutine(cert)

@@ -10,7 +10,6 @@ package simplecert
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"syscall"
@@ -138,7 +137,7 @@ func renewalRoutine(cr *certificate.Resource) {
 				c.FailedToRenewCertificate(err)
 			} else {
 				// otherwise fatal
-				log.Fatal("[FATAL] failed to renew cert: ", err.Error())
+				log.Fatal("failed to renew cert: ", err.Error())
 			}
 		}
 	}

@@ -1,4 +1,4 @@
-module github.com/foomo/simplecert
+module github.com/tjeske/simplecert
 
 go 1.13
 
